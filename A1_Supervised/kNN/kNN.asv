@@ -25,7 +25,7 @@ for i = 1:length(X)
     %Store k closest points
     [~,closestPoints] = mink(distances(:,1),k);
    
-    %Find the prediced classes
+    %Find the correct predictions
     for z = 1:NClasses
        for w = 1:k
            if(LTrain(closestPoints(w,1),1) == classes(z,1))
@@ -33,9 +33,9 @@ for i = 1:length(X)
            end
        end
     end
-    
-    %Find the the class with most occurrences
-    bestMatch = mode(matches);    
+   
+    bestMatch = mode(matches);
+        
     LPred(i,1) = bestMatch;
 end
 

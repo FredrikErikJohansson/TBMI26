@@ -1,4 +1,4 @@
-%% This script will help you test out your kNN code
+ %% This script will help you test out your kNN code
 
 %% Select which data to use:
 
@@ -7,7 +7,7 @@
 % 3 = dot cloud 3
 % 4 = OCR data
 
-dataSetNr = 4; % Change this to load new data 
+dataSetNr = 3; % Change this to load new data 
 
 % X - Data samples
 % D - Desired output from classifier for each sample
