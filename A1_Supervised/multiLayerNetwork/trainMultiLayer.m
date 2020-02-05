@@ -31,8 +31,8 @@ ErrTest(1)  = sum(sum((YTest  - DTest ).^2)) / (NTest  * NClasses);
 
 for n = 1:numIterations
     % Add your own code here
-    grad_v = 0; % Gradient for the output layer
-    grad_w = 0; % And the input layer
+    grad_v = 2*(Wout'*(XTrain'*(YTrain - DTrain)))/NTrain; % Gradient for the output layer
+    grad_w = 2*(XTrain'*((YTrain - DTrain)*Vout'))/NTrain; % And the input layer
     
     % Take a learning step
     Vout = Vout - learningRate * grad_v;
