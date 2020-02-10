@@ -16,7 +16,7 @@ dataSetNr = 3; % Change this to load new data
 
 %% Select a subset of the training features
 
-numBins = 100;                    % Number of Bins you want to devide your data into
+numBins = 3;                    % Number of Bins you want to devide your data into
 numSamplesPerLabelPerBin = inf; % Number of samples per label per bin, set to inf for max number (total number is numLabels*numSamplesPerBin)
 selectAtRandom = true;          % true = select features at random, false = select the first features
 
@@ -29,12 +29,12 @@ selectAtRandom = true;          % true = select features at random, false = sele
 % XBinComb = combineBins(XBins, [1,2,3]);
 
 % Add your own code to setup data for training and test here
-XTrain = XBins{1};
-DTrain = DBins{1};
-LTrain = LBins{1};
-XTest  = combineBins(XBins, (2:numBins));
-DTest  = combineBins(DBins, (2:numBins));
-LTest  = combineBins(LBins, (2:numBins));
+XTrain = combineBins(XBins, [1,2]);
+DTrain = combineBins(DBins, [1,2]);
+LTrain = combineBins(LBins, [1,2]);
+XTest  = XBins{3};
+DTest  = DBins{3};
+LTest  = LBins{3};
 
 %% Modify the X Matrices so that a bias is added
 %  Note that the bias must be the last feature for the plot code to work
