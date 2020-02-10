@@ -19,7 +19,7 @@ dataSetNr = 4; % Change this to load new data
 
 %% Select a subset of the training samples
 
-numBins = 2;                    % Number of bins you want to devide your data into
+numBins = 3;                    % Number of bins you want to devide your data into
 numSamplesPerLabelPerBin = 100; % Number of samples per label per bin, set to inf for max number (total number is numLabels*numSamplesPerBin)
 selectAtRandom = true;          % true = select samples at random, false = select the first features
 
@@ -32,37 +32,53 @@ selectAtRandom = true;          % true = select samples at random, false = selec
 % XBinComb = combineBins(XBins, [1,2,3]);
 
 % Add your own code to setup data for training and test here
-XTrain = XBins{1};
-LTrain = LBins{1};
-XTest  = XBins{2};
-LTest  = LBins{2};
+acc = 0;
+maximum = 0;
+bestK = 0;
+for k = 1:9
+    for i = 1:numBins
+        XTrain = combineBins(XBins, [1:i-1 i+1:numBins]);
+        LTrain = combineBins(LBins, [1:i-1 i+1:numBins]);
+        XTest  = XBins{i};
+        LTest  = LBins{i};
 
 %% Use kNN to classify data
 %  Note: you have to modify the kNN() function yourself.
 
 % Set the number of neighbors
-k = 3;
 
-% Classify training data
-LPredTrain = kNN(XTrain, k, XTrain, LTrain);
-% Classify test data
-LPredTest  = kNN(XTest , k, XTrain, LTrain);
+        %k = 3;
 
-%% Calculate The Confusion Matrix and the Accuracy
-%  Note: you have to modify the calcConfusionMatrix() and calcAccuracy()
-%  functions yourself.
+        % Classify training data
+        LPredTrain = kNN(XTrain, k, XTrain, LTrain);
+        % Classify test data
+        LPredTest  = kNN(XTest , k, XTrain, LTrain);
 
-% The confucionMatrix
-cM = calcConfusionMatrix(LPredTest, LTest)
+        %% Calculate The Confusion Matrix and the Accuracy
+        %  Note: you have to modify the calcConfusionMatrix() and calcAccuracy()
+        %  functions yourself.
 
-% The accuracy
-acc = calcAccuracy(cM)
+        % The confucionMatrix
+        cM = calcConfusionMatrix(LPredTest, LTest);
+
+        % The accuracy
+        
+        acc = acc + calcAccuracy(cM);
+    end
+    if((acc/numBins) > maximum)
+        bestK = k;
+        maximum = (acc/numBins);
+    end
+    acc = 0;
+end
+bestK
+maximum
 
 %% Plot classifications
 %  Note: You should not have to modify this code
 
 if dataSetNr < 4
-    plotResultDots(XTrain, LTrain, LPredTrain, XTest, LTest, LPredTest, 'kNN', [], k);
+    plotResultDots(XTrain, LTrain, LPredTrain, XTest, LTest, LPredTest, 'kNN', [], bestK);
 else
     plotResultsOCR(XTest, LTest, LPredTest)
 end

@@ -31,15 +31,15 @@ ErrTest(1)  = sum(sum((YTest  - DTest ).^2)) / (NTest  * NClasses);
 
 for n = 1:numIterations
     % Add your own code here
-    grad_v = 2*((U'*(YTrain - DTrain)))/NTrain; % Gradient for the output layer
-    grad_w = 2*(XTrain'*(((YTrain - DTrain)*Vout').*(1-U.^2)))/NTrain; % And the input layer
+    grad_v = 2*((U'*(U*Vout - DTrain)))/(NTrain); % Gradient for the output layer
+    grad_w = 2*(XTrain'*(((U*Vout - DTrain)*Vout').*(1-U.^2)))/(NTrain); % And the input layer
     
     % Take a learning step
     Vout = Vout - learningRate * grad_v;
-    Wout = Wout - learningRate * grad_w;
+    Wout = Wout - learningRate * grad_w(:,1:(size(grad_w,2)-1));
     
     % Evaluate errors
-    YTrain = runMultiLayer(XTrain, Wout, Vout);
+    [YTrain,~,U] = runMultiLayer(XTrain, Wout, Vout);
     YTest  = runMultiLayer(XTest , Wout, Vout);
     ErrTrain(1+n) = sum(sum((YTrain - DTrain).^2)) / (NTrain * NClasses);
     ErrTest(1+n)  = sum(sum((YTest  - DTest ).^2)) / (NTest  * NClasses);

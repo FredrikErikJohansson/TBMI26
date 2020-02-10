@@ -7,7 +7,7 @@
 % 3 = dot cloud 3
 % 4 = OCR data
 
-dataSetNr = 4; % Change this to load new data 
+dataSetNr = 1; % Change this to load new data 
 
 % X - Data samples
 % D - Desired output from classifier for each sample
@@ -40,10 +40,10 @@ LTest  = LBins{3};
 %  Note that the bias must be the last feature for the plot code to work
 
 % The training data
-XTrain = [XTrain ones(length(XTrain),1)];
+XTrain = [XTrain ones(size(XTrain,1),1)];
 
 % The test data
-XTest = [XTest ones(length(XTest),1)];
+XTest = [XTest ones(size(XTest,1),1)];
 
 %% Train your single layer network
 %  Note: You need to modify trainSingleLayer() and runSingleLayer()
