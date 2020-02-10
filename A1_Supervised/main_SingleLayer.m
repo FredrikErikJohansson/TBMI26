@@ -49,8 +49,8 @@ XTest = [XTest ones(size(XTest,1),1)];
 %  Note: You need to modify trainSingleLayer() and runSingleLayer()
 %  in order to train the network
 
-numIterations = 10000;  % Change this, number of iterations (epochs)
-learningRate  = 0.0001; % Change this, your learning rate
+numIterations = 1000;  % Change this, number of iterations (epochs)
+learningRate  = 0.001; % Change this, your learning rate
 W0 = sqrt(1/size(XTrain,2)).*randn(size(XTrain,2),size(DTrain,2)); % Change this, initialize your weight matrix W
 
 % Run training loop
