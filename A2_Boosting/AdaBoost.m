@@ -1,12 +1,12 @@
 %% Hyper-parameters
 
 % Number of randomized Haar-features
-nbrHaarFeatures = 25;
+nbrHaarFeatures = 600;
 % Number of training images, will be evenly split between faces and
 % non-faces. (Should be even.)
-nbrTrainImages = 500;
+nbrTrainImages = 2000;
 % Number of weak classifiers
-nbrWeakClassifiers = 30;
+nbrWeakClassifiers = 10;
 
 %% Load face and non-face data and plot a few examples
 load faces;
@@ -60,20 +60,68 @@ nbrTestImages = length(yTest);
 
 %% Implement the AdaBoost training here
 %  Use your implementation of WeakClassifier and WeakClassifierError
+n = size(xTrain, 2);
+d = ones(1, n) / n;
+polarity = 1;
+minE = inf;
+indices = ones(nbrWeakClassifiers, 1);
+polarities = ones(nbrWeakClassifiers, 1);
+thresholds = ones(nbrWeakClassifiers, 1);
+alphas = ones(nbrWeakClassifiers,1);
+for i=1:nbrWeakClassifiers
+    for j=1:nbrHaarFeatures
+        threshold = xTrain(j,:); % Test all thresholds
+        for t = threshold
+            C = WeakClassifier(t, polarity, xTrain(j,:));
+            E = WeakClassifierError(C, d, yTrain);
+            if(E > 0.5)
+                polarity = -polarity;
+                E = 1 - E;
+            end
 
-
+            if(E < minE)
+                minE = E;
+                alpha = (1/2)*log((1-E)/E);
+                indices(i) = j;
+                polarities(i) = polarity;
+                thresholds(i) = t;
+                alphas(i) = alpha;
+                cPol = polarity*C;
+            end
+        end
+    end
+    minE = inf;
+    d = (d.*exp(-alpha*yTrain.*cPol));
+    d(d > 0.5) = 0.5; % If alpha becomes inf
+    d = d./sum(d);
+end
 
 %% Evaluate your strong classifier here
 %  Evaluate on both the training data and test data, but only the test
 %  accuracy can be used as a performance metric since the training accuracy
 %  is biased.
 
+result = zeros(nbrWeakClassifiers, nbrTestImages);
+for i=1:nbrWeakClassifiers
+    result(i,:) = alphas(i)*WeakClassifier(thresholds(i), polarities(i), xTest(indices(i),:));
+end
+
+Classifications = sign(sum(result,1));
+
+Accuracy = 1 - mean(abs(Classifications - yTest))/2
 
 
 %% Plot the error of the strong classifier as a function of the number of weak classifiers.
 %  Note: you can find this error without re-training with a different
 %  number of weak classifiers.
 
+errors = zeros(nbrWeakClassifiers,1);
+for i=1:nbrWeakClassifiers
+    errors(i) = mean(abs(sign(sum(result(i,:),1)) - yTest))/2;
+end
+
+figure;
+plot(errors);
 
 
 %% Plot some of the misclassified faces and non-faces
