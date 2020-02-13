@@ -1,12 +1,12 @@
 %% Hyper-parameters
 
 % Number of randomized Haar-features
-nbrHaarFeatures = 600;
+nbrHaarFeatures = 100;
 % Number of training images, will be evenly split between faces and
 % non-faces. (Should be even.)
-nbrTrainImages = 2000;
+nbrTrainImages = 1000;
 % Number of weak classifiers
-nbrWeakClassifiers = 10;
+nbrWeakClassifiers = 36; % Pick something that can be sqrt
 
 %% Load face and non-face data and plot a few examples
 load faces;
@@ -79,7 +79,7 @@ for i=1:nbrWeakClassifiers
                 E = 1 - E;
             end
 
-            if(E < minE)
+            if(E < minE && ~ismember(j,indices)) % Only pick unique Haar-features
                 minE = E;
                 alpha = (1/2)*log((1-E)/E);
                 indices(i) = j;
@@ -103,7 +103,8 @@ end
 
 result = zeros(nbrWeakClassifiers, nbrTestImages);
 for i=1:nbrWeakClassifiers
-    result(i,:) = alphas(i)*WeakClassifier(thresholds(i), polarities(i), xTest(indices(i),:));
+    %result(i,:) = alphas(i) * WeakClassifier(thresholds(i), polarities(i), xTest(indices(i),:));
+    result(i,:) = WeakClassifier(thresholds(i), polarities(i), xTest(indices(i),:));
 end
 
 Classifications = sign(sum(result,1));
@@ -120,7 +121,7 @@ for i=1:nbrWeakClassifiers
     errors(i) = mean(abs(sign(sum(result(i,:),1)) - yTest))/2;
 end
 
-figure;
+figure(4);
 plot(errors);
 
 
@@ -132,4 +133,12 @@ plot(errors);
 %% Plot your choosen Haar-features
 %  Use the subplot command to make nice figures with multiple images.
 
+figure(5);
+colormap gray;
+for k = 1:nbrWeakClassifiers
+    s = sqrt(nbrWeakClassifiers);
+    subplot(s,s,k),imagesc(haarFeatureMasks(:,:,(indices(k))),[-1 2]);
+    axis image;
+    axis off;
+end
 
