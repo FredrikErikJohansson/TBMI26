@@ -4,9 +4,9 @@
 nbrHaarFeatures = 100;
 % Number of training images, will be evenly split between faces and
 % non-faces. (Should be even.)
-nbrTrainImages = 1000;
+nbrTrainImages = 2000;
 % Number of weak classifiers
-nbrWeakClassifiers = 36; % Pick something that can be sqrt
+nbrWeakClassifiers = 9; % Pick something that can be sqrt
 
 %% Load face and non-face data and plot a few examples
 load faces;
@@ -63,12 +63,16 @@ nbrTestImages = length(yTest);
 n = size(xTrain, 2);
 d = ones(1, n) / n;
 polarity = 1;
-minE = inf;
-indices = ones(nbrWeakClassifiers, 1);
-polarities = ones(nbrWeakClassifiers, 1);
-thresholds = ones(nbrWeakClassifiers, 1);
-alphas = ones(nbrWeakClassifiers,1);
+alphas = zeros(nbrWeakClassifiers,1);
+indices = zeros(nbrWeakClassifiers, 1);
+thresholds = zeros(nbrWeakClassifiers, 1);
+polarities = zeros(nbrWeakClassifiers, 1);
+errors = zeros(nbrWeakClassifiers, 1);
+%weights = zeros(nbrWeakClassifiers, 1);
+
 for i=1:nbrWeakClassifiers
+    (i/nbrWeakClassifiers)*100
+    minE = 0.5;
     for j=1:nbrHaarFeatures
         threshold = xTrain(j,:); % Test all thresholds
         for t = threshold
@@ -78,20 +82,19 @@ for i=1:nbrWeakClassifiers
                 polarity = -polarity;
                 E = 1 - E;
             end
-
-            if(E < minE && ~ismember(j,indices)) % Only pick unique Haar-features
+            
+            if(E < minE)
                 minE = E;
-                alpha = (1/2)*log((1-E)/E);
-                indices(i) = j;
+                alphas(i) = 0.5*log((1-E)/E);
                 polarities(i) = polarity;
                 thresholds(i) = t;
-                alphas(i) = alpha;
-                cPol = polarity*C;
+                indices(i) = j;
+                errors(i) = E;
             end
         end
     end
-    minE = inf;
-    d = (d.*exp(-alpha*yTrain.*cPol));
+    
+    d = (d.*exp(-alphas(i)*yTrain.*(C*polarities(i))));
     d(d > 0.5) = 0.5; % If alpha becomes inf
     d = d./sum(d);
 end
@@ -103,13 +106,12 @@ end
 
 result = zeros(nbrWeakClassifiers, nbrTestImages);
 for i=1:nbrWeakClassifiers
-    %result(i,:) = alphas(i) * WeakClassifier(thresholds(i), polarities(i), xTest(indices(i),:));
-    result(i,:) = WeakClassifier(thresholds(i), polarities(i), xTest(indices(i),:));
+    result(i,:) = alphas(i) * WeakClassifier(thresholds(i,:), polarities(i,:), xTest(indices(i),:));
+    %errors(i,:) = WeakClassifierError(result(i,:), d, yTest);
 end
 
 Classifications = sign(sum(result,1));
-
-Accuracy = 1 - mean(abs(Classifications - yTest))/2
+Accuracy = sum(Classifications(1,:) == yTest(1,:))/nbrTestImages
 
 
 %% Plot the error of the strong classifier as a function of the number of weak classifiers.
@@ -118,7 +120,7 @@ Accuracy = 1 - mean(abs(Classifications - yTest))/2
 
 errors = zeros(nbrWeakClassifiers,1);
 for i=1:nbrWeakClassifiers
-    errors(i) = mean(abs(sign(sum(result(i,:),1)) - yTest))/2;
+    errors(i) = sum(sign(sum(result(1:i,:),1)) ~= yTest)/nbrWeakClassifiers;
 end
 
 figure(4);
