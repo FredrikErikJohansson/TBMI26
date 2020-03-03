@@ -1,12 +1,12 @@
 %% Hyper-parameters
 
 % Number of randomized Haar-features
-nbrHaarFeatures = 100;
+nbrHaarFeatures = 1000;
 % Number of training images, will be evenly split between faces and
 % non-faces. (Should be even.)
-nbrTrainImages = 2000;
+nbrTrainImages = 1000;
 % Number of weak classifiers
-nbrWeakClassifiers = 9; % Pick something that can be sqrt
+nbrWeakClassifiers = 25; % Pick atleast 25
 
 %% Load face and non-face data and plot a few examples
 load faces;
@@ -62,13 +62,11 @@ nbrTestImages = length(yTest);
 %  Use your implementation of WeakClassifier and WeakClassifierError
 n = size(xTrain, 2);
 d = ones(1, n) / n;
-polarity = 1;
 alphas = zeros(nbrWeakClassifiers,1);
 indices = zeros(nbrWeakClassifiers, 1);
 thresholds = zeros(nbrWeakClassifiers, 1);
 polarities = zeros(nbrWeakClassifiers, 1);
-errors = zeros(nbrWeakClassifiers, 1);
-%weights = zeros(nbrWeakClassifiers, 1);
+h = zeros(nbrWeakClassifiers, nbrTrainImages);
 
 for i=1:nbrWeakClassifiers
     (i/nbrWeakClassifiers)*100
@@ -76,6 +74,7 @@ for i=1:nbrWeakClassifiers
     for j=1:nbrHaarFeatures
         threshold = xTrain(j,:); % Test all thresholds
         for t = threshold
+            polarity = 1;
             C = WeakClassifier(t, polarity, xTrain(j,:));
             E = WeakClassifierError(C, d, yTrain);
             if(E > 0.5)
@@ -85,16 +84,16 @@ for i=1:nbrWeakClassifiers
             
             if(E < minE)
                 minE = E;
-                alphas(i) = 0.5*log((1-E)/E);
+                alphas(i) = 0.5*log((1.00001-E)/(E+0.00001));
                 polarities(i) = polarity;
                 thresholds(i) = t;
                 indices(i) = j;
-                errors(i) = E;
+                h(i,:) = C(1,:) * polarity;
             end
         end
     end
     
-    d = (d.*exp(-alphas(i)*yTrain.*(C*polarities(i))));
+    d = (d.*exp(-alphas(i)*yTrain.*h(i,:)));
     d(d > 0.5) = 0.5; % If alpha becomes inf
     d = d./sum(d);
 end
@@ -104,42 +103,63 @@ end
 %  accuracy can be used as a performance metric since the training accuracy
 %  is biased.
 
-result = zeros(nbrWeakClassifiers, nbrTestImages);
+resultTrain = zeros(nbrWeakClassifiers, nbrTrainImages);
+resultTest = zeros(nbrWeakClassifiers, nbrTestImages);
+
+accTrain = zeros(nbrWeakClassifiers,1);
+accTest = zeros(nbrWeakClassifiers,1);
+
 for i=1:nbrWeakClassifiers
-    result(i,:) = alphas(i) * WeakClassifier(thresholds(i,:), polarities(i,:), xTest(indices(i),:));
-    %errors(i,:) = WeakClassifierError(result(i,:), d, yTest);
+    resultTrain(i,:) = alphas(i) * WeakClassifier(thresholds(i,:), polarities(i,:), xTrain(indices(i),:));
+    resultTest(i,:) = alphas(i) * WeakClassifier(thresholds(i,:), polarities(i,:), xTest(indices(i),:));
+     
+    accTrain(i) = sum(sign(sum(resultTrain(1:i,:),1)) == yTrain)/nbrTrainImages;
+    accTest(i) = sum(sign(sum(resultTest(1:i,:),1)) == yTest)/nbrTestImages;
 end
 
-Classifications = sign(sum(result,1));
-Accuracy = sum(Classifications(1,:) == yTest(1,:))/nbrTestImages
-
+missIndices = find(sign(sum(resultTest(1:nbrWeakClassifiers,:),1)) ~= yTest);
+Accuracy = accTest(nbrWeakClassifiers)
 
 %% Plot the error of the strong classifier as a function of the number of weak classifiers.
 %  Note: you can find this error without re-training with a different
 %  number of weak classifiers.
 
-errors = zeros(nbrWeakClassifiers,1);
-for i=1:nbrWeakClassifiers
-    errors(i) = sum(sign(sum(result(1:i,:),1)) ~= yTest)/nbrWeakClassifiers;
-end
-
 figure(4);
-plot(errors);
+plot(accTrain);
+hold on
+plot(accTest);
+hold off
 
+figure(5);
+plot(1 - accTest);
 
 %% Plot some of the misclassified faces and non-faces
 %  Use the subplot command to make nice figures with multiple images.
 
+figure(6);
+colormap gray;
+for k = 1:25
+    subplot(5,5,k),imagesc(testImages(:,:,missIndices(k)));
+    axis image;
+    axis off;
+end
+
+figure(7);
+colormap gray;
+for k = 1:25
+    subplot(5,5,k),imagesc(testImages(:,:,missIndices(end-k)));
+    axis image;
+    axis off;
+end
 
 
 %% Plot your choosen Haar-features
 %  Use the subplot command to make nice figures with multiple images.
 
-figure(5);
+figure(8);
 colormap gray;
-for k = 1:nbrWeakClassifiers
-    s = sqrt(nbrWeakClassifiers);
-    subplot(s,s,k),imagesc(haarFeatureMasks(:,:,(indices(k))),[-1 2]);
+for k = 1:25
+    subplot(5,5,k),imagesc(haarFeatureMasks(:,:,(indices(k))),[-1 2]);
     axis image;
     axis off;
 end
