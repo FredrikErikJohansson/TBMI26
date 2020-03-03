@@ -1,12 +1,12 @@
 %% Hyper-parameters
 
 % Number of randomized Haar-features
-nbrHaarFeatures = 1000;
+nbrHaarFeatures = 300;
 % Number of training images, will be evenly split between faces and
 % non-faces. (Should be even.)
-nbrTrainImages = 1000;
+nbrTrainImages = 6000;
 % Number of weak classifiers
-nbrWeakClassifiers = 25; % Pick atleast 25
+nbrWeakClassifiers = 80; % Pick atleast 25
 
 %% Load face and non-face data and plot a few examples
 load faces;
@@ -69,7 +69,7 @@ polarities = zeros(nbrWeakClassifiers, 1);
 h = zeros(nbrWeakClassifiers, nbrTrainImages);
 
 for i=1:nbrWeakClassifiers
-    (i/nbrWeakClassifiers)*100
+    disp((i/nbrWeakClassifiers)*100)
     minE = 0.5;
     for j=1:nbrHaarFeatures
         threshold = xTrain(j,:); % Test all thresholds
