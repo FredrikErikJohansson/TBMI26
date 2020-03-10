@@ -2,11 +2,11 @@
 %  Initialize the world, Q-table, and hyperparameters
 actions = [1 2 3 4];
 probs = [1 1 1 1];
-exploration = 0.5;
+%exploration = 0.5;
 learnRate = 0.2;
-discount = 0.9;
-episodes = 1000;
-world = 1;
+discount = 0.99;
+episodes = 5000;
+world = 4;
 state = gwinit(world);
 Q = randn(state.ysize, state.xsize, length(actions));
 Q(1,:,2)   = -inf;
@@ -19,24 +19,31 @@ Q(:,end,3) = -inf;
 for i = 1:episodes
     disp((i/episodes)*100)
     state = gwinit(world);
-    y = state.pos(1,1);
-    x = state.pos(2,1);
-    while(state.isvalid)
-        exploration = getepsilon(i, episodes);
-        [a, ~] = chooseaction(Q, y, x, actions, probs, exploration);
-        state = gwaction(a);
+    exploration = getepsilon(i, episodes);
+    while(true) % Find goal
+        y = state.pos(1,1);
+        x = state.pos(2,1);
+        while(true) % Find valid action
+            [a, ~] = chooseaction(Q, y, x, actions, probs, exploration);
+            state = gwaction(a);
+
+            if(state.isvalid)
+                break;
+            end
+        end
+
         y2 = state.pos(1,1);
         x2 = state.pos(2,1);
-        y = y2;
-        x = x2;
+
         reward = state.feedback;
         [~, oa] = chooseaction(Q, y2, x2, actions, probs, exploration);
-        
-        Q(y, x, a) = (1- learnRate)*Q(y, x, a) + learnRate*(reward + discount*Q(y2, x2, oa));  
-        
+
         if(state.isterminal)
+            Q(y2, x2, :) = 0;
             break;
         end
+
+        Q(y, x, a) = (1- learnRate)*Q(y, x, a) + learnRate*(reward + discount*Q(y2, x2, oa));
     end
 end
 
@@ -53,32 +60,17 @@ end
 
 figure(5);
 
-numTest = 10;
-accuracy = 0;
+state = gwinit(world);
+y = state.pos(1,1);
+x = state.pos(2,1);
+while(~state.isterminal)
+    [a, ~] = chooseaction(Q, y, x, actions, probs, 0);
 
-for i = 1:numTest
-    state = gwinit(world);
+    state = gwaction(a);
     y = state.pos(1,1);
     x = state.pos(2,1);
-    for j = 1:20
-        [a, ~] = chooseaction(Q, y, x, actions, probs, 0);
 
-        state = gwaction(a);
-        y = state.pos(1,1);
-        x = state.pos(2,1);
-        
-        if(state.isvalid == false)
-            break;
-        end
-        
-        gwdraw(i);
-
-        if(state.isterminal)
-            accuracy = accuracy + 1;
-            break;
-        end
-    end
+    P = getpolicy(Q);
+    gwdraw(i, P);
 end
-
-accuracy/numTest
 
