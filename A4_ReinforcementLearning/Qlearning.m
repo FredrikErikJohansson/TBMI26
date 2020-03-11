@@ -2,11 +2,11 @@
 %  Initialize the world, Q-table, and hyperparameters
 actions = [1 2 3 4];
 probs = [1 1 1 1];
-%exploration = 0.5;
-learnRate = 0.9;
+%exploration = 0.1;
+learnRate = 0.2;
 discount = 0.9;
-episodes = 1000;
-world = 3;
+episodes = 2000;
+world = 1;
 state = gwinit(world);
 Q = randn(state.ysize, state.xsize, length(actions));
 Q(1,:,2)   = -inf;
@@ -69,6 +69,7 @@ V = getvalue(Q);
 imagesc(V);
 
 P = getpolicy(Q);
+i = 1;
 
 figure(6);
 while(~state.isterminal)
@@ -78,5 +79,6 @@ while(~state.isterminal)
     y = state.pos(1,1);
     x = state.pos(2,1);
     gwdraw(i, P);
+    i = i + 1;
 end
 
