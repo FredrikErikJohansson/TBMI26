@@ -3,10 +3,10 @@
 actions = [1 2 3 4];
 probs = [1 1 1 1];
 %exploration = 0.5;
-learnRate = 0.2;
-discount = 0.99;
-episodes = 5000;
-world = 4;
+learnRate = 0.9;
+discount = 0.9;
+episodes = 1000;
+world = 3;
 state = gwinit(world);
 Q = randn(state.ysize, state.xsize, length(actions));
 Q(1,:,2)   = -inf;
@@ -58,19 +58,25 @@ for k = 1:4
     imagesc(Q(:,:,k));
 end
 
-figure(5);
+
 
 state = gwinit(world);
 y = state.pos(1,1);
 x = state.pos(2,1);
+
+figure(5);
+V = getvalue(Q);
+imagesc(V);
+
+P = getpolicy(Q);
+
+figure(6);
 while(~state.isterminal)
     [a, ~] = chooseaction(Q, y, x, actions, probs, 0);
 
     state = gwaction(a);
     y = state.pos(1,1);
     x = state.pos(2,1);
-
-    P = getpolicy(Q);
     gwdraw(i, P);
 end
 
